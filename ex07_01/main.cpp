@@ -36,7 +36,6 @@ enum MouseMode
   MM_LIGHT3
 };
 
-//
 struct RayTracingInternalData
 {
   int nextPixel_i;
@@ -178,11 +177,11 @@ void rayTriangleIntersect( const TriMesh& in_Mesh, const int in_Triangle_idx, co
   Eigen::Vector3d N = (v1 - v3).cross(v2 - v3);
   N.normalize();
 
-  if ((N.transpose()).dot(in_Ray.d) >= 0) { 
+  if (N.dot(in_Ray.d) >= 0) {
       return;
   }
 
-  double _t = (N.transpose().dot(v3 - in_Ray.o)) / (N.transpose().dot(in_Ray.d));
+  double _t = (N.dot(v3 - in_Ray.o)) / (N.dot(in_Ray.d));
 
   if (_t <= 0) {       
       return;
@@ -215,11 +214,18 @@ void rayTracing( const Ray& in_Ray, RayHit& io_Hit )
   {
     for( int k=0; k<g_Obj.meshes[m].triangles.size(); k++ )
     {   
-        rayTriangleIntersect(g_Obj.meshes[m], k, in_Ray, io_Hit);
+        RayHit t_Hit;
+        rayTriangleIntersect(g_Obj.meshes[m], k, in_Ray, t_Hit);
 
-        if (io_Hit.t == __FAR__ || t_min < io_Hit.t) {
+        if (t_Hit.t == __FAR__ || t_min < t_Hit.t) {
             continue;
         }
+
+        t_min = t_Hit.t;
+        alpha_I = t_Hit.alpha;
+        beta_I = t_Hit.beta;
+        mesh_idx = m;
+        tri_idx = k;
     }
   }
   
